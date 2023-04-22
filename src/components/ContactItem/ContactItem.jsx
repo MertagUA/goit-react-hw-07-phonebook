@@ -1,11 +1,12 @@
-import { useDeleteContactMutation } from 'redux/Slices/contactsSlice';
 import { Item, Div, ContactName, DeleteButton } from './ContactItem.styled';
 import PropTypes from 'prop-types';
 import { toast } from 'react-toastify';
-import { Spinner } from 'utils/spinner';
+import { deleteContacts } from 'redux/contacts/contactsOperations';
+import { useDispatch } from 'react-redux';
 
 export const ContactItem = ({ id, name, phone }) => {
-  const [deleteContact, { isLoading }] = useDeleteContactMutation();
+  const dispatch = useDispatch();
+
   return (
     <Item>
       <Div />
@@ -14,11 +15,11 @@ export const ContactItem = ({ id, name, phone }) => {
       <DeleteButton
         type="button"
         onClick={() => {
-          deleteContact(id);
+          dispatch(deleteContacts(id));
           toast.success(`Contact ${name} deleted!`);
         }}
       >
-        Delete {isLoading && <Spinner />}
+        Delete
       </DeleteButton>
     </Item>
   );

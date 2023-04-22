@@ -4,20 +4,20 @@ import { Div, Frame, Title } from './App.styled';
 import { ContactForm } from './ContactForm/ContactForm';
 import { ContactList } from './ContactList/ContactList';
 import { Filter } from './Filter/Filter';
-import { useDispatch } from 'react-redux';
-import { setFilter } from '../redux/Slices/filterSlice';
-import {
-  useGetContactsQuery,
-  useAddContactMutation,
-} from 'redux/Slices/contactsSlice';
+import { useDispatch, useSelector } from 'react-redux';
 import { NoContacts } from './NoContacts/NoContacts';
+import { getContacts } from 'redux/Slices/contactsSlice';
+import { addContacts, fetchContacts } from 'redux/contacts/contactsOperations';
+import { useEffect } from 'react';
 
 export function App() {
-  const { data: contacts, error, isLoading } = useGetContactsQuery();
-
-  const [addContact] = useAddContactMutation();
-
   const dispatch = useDispatch();
+
+  const { error, entities: contacts } = useSelector(getContacts);
+
+  useEffect(() => {
+    dispatch(fetchContacts());
+  }, [dispatch]);
 
   const onContactFormSubmit = async (newContact, { resetForm }) => {
     try {
@@ -29,16 +29,12 @@ export function App() {
         return alert(`${newContact.name} is already in contacts`);
       }
 
-      await addContact(newContact);
+      dispatch(addContacts(newContact));
       toast.success(`New contact ${newContact.name} created!`);
     } catch (error) {
       toast.error('Error!');
     }
     resetForm();
-  };
-
-  const filterContacts = e => {
-    dispatch(setFilter(e.target.value.toLowerCase()));
   };
 
   return (
@@ -48,12 +44,8 @@ export function App() {
           <Title>Phonebook</Title>
           <ContactForm onContactFormSubmit={onContactFormSubmit} />
           <h2>Contacts</h2>
-          <Filter OnChange={filterContacts} />
-          {error ? (
-            <NoContacts />
-          ) : (
-            !isLoading && <ContactList contacts={contacts} />
-          )}
+          <Filter />
+          {error ? <NoContacts /> : <ContactList contacts={contacts} />}
         </Div>
       </Frame>
       <ToastContainer />

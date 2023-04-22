@@ -1,36 +1,60 @@
-import { createApi, fetchBaseQuery } from '@reduxjs/toolkit/query/react';
+import {
+  fetchContacts,
+  addContacts,
+  deleteContacts,
+} from '../contacts/contactsOperations';
+import { createSlice } from '@reduxjs/toolkit';
 
-export const contactsApi = createApi({
-  reducerPath: 'contacts',
-  baseQuery: fetchBaseQuery({
-    baseUrl: 'https://643e9957c72fda4a0bfb73d9.mockapi.io/api/v1',
-  }),
-  tagTypes: ['Contact'],
-  endpoints: builder => ({
-    getContacts: builder.query({
-      query: () => '/contacts',
-      providesTags: ['Contact'],
-    }),
-    addContact: builder.mutation({
-      query: values => ({
-        url: '/contacts',
-        method: 'POST',
-        body: values,
-      }),
-      invalidatesTags: ['Contact'],
-    }),
-    deleteContact: builder.mutation({
-      query: id => ({
-        url: `./contacts/${id}`,
-        method: 'DELETE',
-      }),
-      invalidatesTags: ['Contact'],
-    }),
-  }),
+const initialState = {
+  entities: [],
+  isLoading: false,
+  error: null,
+};
+
+export const contactsSlice = createSlice({
+  name: 'contacts',
+  initialState,
+  extraReducers: builder => {
+    builder
+      .addCase(fetchContacts.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(fetchContacts.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.entities = action.payload;
+        state.error = null;
+      })
+      .addCase(fetchContacts.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(addContacts.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(addContacts.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.entities.push(action.payload);
+        state.error = null;
+      })
+      .addCase(addContacts.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(deleteContacts.pending, state => {
+        state.isLoading = true;
+      })
+      .addCase(deleteContacts.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.entities = state.entities.filter(entity => {
+          return entity.id !== action.payload.id;
+        });
+        state.error = null;
+      })
+      .addCase(deleteContacts.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      });
+  },
 });
 
-export const {
-  useGetContactsQuery,
-  useAddContactMutation,
-  useDeleteContactMutation,
-} = contactsApi;
+export const getContacts = state => state.contacts;
